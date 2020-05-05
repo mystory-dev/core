@@ -1,0 +1,21 @@
+[package]
+name = "github"
+version = "0.1.0"
+authors = ["Samuel Kubai <kamausamuel11@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+csv = "1.1"
+dotenv = "0.15.0"
+envy = "0.4"
+env_logger = "0.7.1"
+graphql_client = "0.9.0"
+log = "0.4.0"
+serde = "1.0.106"
+structopt = "0.3.13"
+reqwest = "^0.9"
+tokio = { version = "0.2", features = ["full"] }
