@@ -1,6 +1,6 @@
 use anyhow::*;
 use graphql_client::{GraphQLQuery, Response};
-use log::{debug, error, info, trace};
+use log::{error, info};
 
 type Date = String;
 

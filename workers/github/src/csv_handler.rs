@@ -1,8 +1,7 @@
-use crate::github::ContributionsDTO;
+use crate::github::contributions::ContributionsDTO;
 use anyhow::*;
 use csv::Writer;
 use std::fs::File;
-use std::net::Shutdown::Write;
 use std::path::Path;
 
 pub struct CSVHandler<'a> {

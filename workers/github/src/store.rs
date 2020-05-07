@@ -1,5 +1,5 @@
 use crate::csv_handler::CSVHandler;
-use crate::github::ContributionsDTO;
+use crate::github::contributions::ContributionsDTO;
 use log::warn;
 use std::path::Path;
 

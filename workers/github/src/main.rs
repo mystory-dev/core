@@ -7,6 +7,7 @@ use std::path::Path;
 use structopt::StructOpt;
 
 mod csv_handler;
+mod dto;
 mod github;
 mod store;
 
@@ -16,7 +17,7 @@ mod store;
     about = "A worker to pull data from github for our users"
 )]
 struct GithubWorker {
-    #[structopt(short, long)]
+    #[structopt(short, long, env = "GITHUB_API_TOKEN")]
     token: String,
     #[structopt(short, long)]
     username: String,
@@ -47,7 +48,12 @@ async fn main() -> Result<()> {
         ));
     }
 
-    let contributions = github::get_user_contributions(app.token, app.username).await?;
+    let pr_contributions =
+        github::pull_request::get_user_pull_requests(app.token.clone(), app.username.clone())
+            .await?;
+
+    let contributions =
+        github::contributions::get_user_contributions(app.token, app.username).await?;
     let contributions_file_path: String;
     match Path::new(&app.output).join("contributions.csv").to_str() {
         Some(path) => contributions_file_path = String::from(path),
@@ -59,8 +65,9 @@ async fn main() -> Result<()> {
         "database" => StoreDestination::Database,
         _ => StoreDestination::File(contributions_file_path),
     };
-    let store = Store::new(store_type);
 
+    let store = Store::new(store_type);
     store.store_contributions(&contributions);
+
     Ok(())
 }

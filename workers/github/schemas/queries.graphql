@@ -1,16 +1,51 @@
 query ContributionsQuery($username: String!) {
-    user(login: $username) {
-        contributionsCollection {
-            contributionCalendar {
-                weeks {
-                    firstDay
-                    contributionDays {
-                        contributionCount
-                        date
-                        weekday
-                    }
-                }
-            }
+  user(login: $username) {
+    contributionsCollection {
+      contributionCalendar {
+        weeks {
+          firstDay
+          contributionDays {
+            contributionCount
+            date
+            weekday
+          }
         }
+      }
     }
+  }
+}
+
+query PullRequestContributionsQuery($username: String!) {
+  user(login: $username) {
+    contributionsCollection {
+      pullRequestContributions(first: 100) {
+        nodes {
+          occurredAt
+          pullRequest {
+            id
+            title
+            baseRepository {
+              nameWithOwner
+            }
+            comments(first: 100) {
+              nodes {
+                publishedAt
+                viewerDidAuthor
+                body
+              }
+            }
+            commits(first: 100) {
+              nodes {
+                id
+                commit {
+                  messageHeadline
+                  pushedDate
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
