@@ -1,12 +1,15 @@
-use crate::store::{Store, StoreDestination};
 use anyhow::*;
+use async_std::task;
 use dotenv::dotenv;
 use env_logger::{Builder, Target};
+use log::{debug, error};
 use serde::Deserialize;
-use std::path::Path;
+use sqlx::PgPool;
+use store::Store;
 use structopt::StructOpt;
 
 mod csv_handler;
+mod database;
 mod dto;
 mod github;
 mod store;
@@ -25,6 +28,8 @@ struct GithubWorker {
     store: String,
     #[structopt(long, env = "OUTPUT_LOCATION")]
     output: String,
+    #[structopt(long, env = "DATABASE_URL")]
+    database: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -32,8 +37,34 @@ struct Config {
     github_api_token: String,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
+    let app = make_app()?;
+
+    let mut db_pool = task::block_on(connect_to_database(&app.database))?;
+
+    let pr_contributions = task::block_on(github::pull_request::get_user_pull_requests(
+        app.token.clone(),
+        app.username.clone(),
+    ))?;
+    debug!(
+        "Fetched {} pull request contributions for {}",
+        pr_contributions.pull_requests.keys().len(),
+        app.username
+    );
+    debug!("{:?}", pr_contributions.pull_requests.keys());
+
+    let stored_pull_requests =
+        task::block_on(Store::store_pull_requests(&db_pool, &pr_contributions))?;
+
+    let stored_reviews = task::block_on(Store::store_reviews(&db_pool, &pr_contributions))?;
+    let stored_commits = task::block_on(Store::store_commits(&db_pool, &pr_contributions))?;
+
+    debug!("Bugging out!");
+
+    Ok(())
+}
+
+fn make_app() -> Result<GithubWorker> {
     let mut builder = Builder::from_default_env();
 
     dotenv().ok();
@@ -48,26 +79,14 @@ async fn main() -> Result<()> {
         ));
     }
 
-    let pr_contributions =
-        github::pull_request::get_user_pull_requests(app.token.clone(), app.username.clone())
-            .await?;
+    debug!("Aplication configuration:");
+    debug!("Token => {}", &app.token);
+    debug!("Username => {}", &app.username);
+    debug!("\n");
 
-    let contributions =
-        github::contributions::get_user_contributions(app.token, app.username).await?;
-    let contributions_file_path: String;
-    match Path::new(&app.output).join("contributions.csv").to_str() {
-        Some(path) => contributions_file_path = String::from(path),
-        None => return Err(anyhow!("Could not parse the contributions file path")),
-    };
+    Ok(app)
+}
 
-    let store_type = match app.store.as_str() {
-        "file" => StoreDestination::File(contributions_file_path),
-        "database" => StoreDestination::Database,
-        _ => StoreDestination::File(contributions_file_path),
-    };
-
-    let store = Store::new(store_type);
-    store.store_contributions(&contributions);
-
-    Ok(())
+async fn connect_to_database(database_url: &str) -> Result<PgPool> {
+    Ok(PgPool::new(database_url).await?)
 }

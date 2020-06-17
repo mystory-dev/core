@@ -1,42 +1,45 @@
-use crate::csv_handler::CSVHandler;
-use crate::github::contributions::ContributionsDTO;
-use log::warn;
-use std::path::Path;
+use crate::database::repository::{CommitRepository, PullRequestRepository, ReviewRepository};
+use crate::dto::pull_requests::PullRequestsDTO;
+use anyhow::*;
+use sqlx::PgPool;
 
-pub struct Store {
-    destination: StoreDestination,
-}
-
-pub enum StoreDestination {
-    File(String),
-    Database,
-}
+pub struct Store {}
 
 impl Store {
-    pub fn new(destination: StoreDestination) -> Store {
-        Store { destination }
-    }
-
-    pub fn store_contributions(&self, contributions: &ContributionsDTO) -> anyhow::Result<()> {
-        match &self.destination {
-            StoreDestination::File(file) => {
-                self.store_contributions_to_file(contributions, file)?;
-            }
-            StoreDestination::Database => {
-                warn!("Storing contributions to the database has not yet been implemented")
-            }
+    pub async fn store_pull_requests(
+        db_pool: &PgPool,
+        pull_requests_dto: &PullRequestsDTO,
+    ) -> Result<()> {
+        for pull_request in pull_requests_dto.pull_requests.iter() {
+            let result = PullRequestRepository::create(db_pool, pull_request.1).await?;
         }
+
         Ok(())
     }
 
-    fn store_contributions_to_file(
-        &self,
-        contributions: &ContributionsDTO,
-        path: &String,
-    ) -> anyhow::Result<bool> {
-        CSVHandler::new(Path::new(path))
-            .check_for_file_path(true)?
-            .store_contributions(contributions)?;
-        Ok(true)
+    pub async fn store_reviews(
+        db_pool: &PgPool,
+        pull_requests_dto: &PullRequestsDTO,
+    ) -> Result<()> {
+        for (_, pull_request) in pull_requests_dto.pull_requests.iter() {
+            for review in &pull_request.reviews {
+                ReviewRepository::create(db_pool, &pull_request, review).await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn store_commits(
+        db_pool: &PgPool,
+        pull_requests_dto: &PullRequestsDTO,
+    ) -> Result<()> {
+        for (_, pull_request) in pull_requests_dto.pull_requests.iter() {
+            for commit in &pull_request.commits {
+                CommitRepository::create(db_pool, &pull_request, commit).await?;
+            }
+        }
+
+        Ok(())
     }
 }

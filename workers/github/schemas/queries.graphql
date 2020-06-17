@@ -15,32 +15,117 @@ query ContributionsQuery($username: String!) {
   }
 }
 
-query PullRequestContributionsQuery($username: String!) {
+query PullRequestContributionsQuery($username: String!, $currentCursor: String) {
   user(login: $username) {
     contributionsCollection {
-      pullRequestContributions(first: 100) {
+      pullRequestContributions(first: 10, after: $currentCursor) {
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
         nodes {
           occurredAt
           pullRequest {
             id
+            number
             title
-            baseRepository {
+            createdAt
+            closedAt
+            author {
+              __typename
+              ...on User {
+                id
+              }
+            }
+            repository {
               nameWithOwner
             }
-            comments(first: 100) {
+            reviews(first: 100) {
+              pageInfo {
+                hasNextPage
+              }
               nodes {
+                id
                 publishedAt
                 viewerDidAuthor
                 body
+                state
+                author {
+                  __typename
+                  ...on User {
+                    id
+                  }
+                }
               }
             }
             commits(first: 100) {
+              pageInfo {
+                hasNextPage
+              }
               nodes {
                 id
                 commit {
+                  abbreviatedOid
                   messageHeadline
                   pushedDate
+                  author {
+                    user {
+                      id
+                    }
+                  }
                 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query PullRequestReviewsQuery($name: String!, $owner: String!, $number: Int!, $currentCursor: String) {
+  repository(name: $name, owner: $owner) {
+    pullRequest(number: $number) {
+      reviews(first: 100, after: $currentCursor) {
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+        nodes {
+          id
+          publishedAt
+          viewerDidAuthor
+          body
+          state
+          author {
+            __typename
+            ...on User {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query PullRequestCommitsQuery($name: String!, $owner: String!, $number: Int!, $currentCursor: String) {
+  repository(name: $name, owner: $owner) {
+    pullRequest(number: $number) {
+      commits(first: 100, after: $currentCursor) {
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+        nodes {
+          id
+          commit {
+            abbreviatedOid
+            messageHeadline
+            pushedDate
+            author {
+              user {
+                id
               }
             }
           }

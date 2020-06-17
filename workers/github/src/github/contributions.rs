@@ -1,8 +1,7 @@
+use crate::dto::contributions::{ContributionsDTO, Date};
 use anyhow::*;
 use graphql_client::{GraphQLQuery, Response};
 use log::{error, info};
-
-type Date = String;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -11,25 +10,6 @@ type Date = String;
     response_derives = "Debug"
 )]
 struct ContributionsQuery;
-
-type Contribution = (Date, i64);
-
-#[derive(Debug)]
-pub struct ContributionsDTO {
-    pub contributions: Vec<Contribution>,
-}
-
-impl ContributionsDTO {
-    fn new() -> ContributionsDTO {
-        ContributionsDTO {
-            contributions: Vec::new(),
-        }
-    }
-
-    fn add_contribution(&mut self, contribution: Contribution) {
-        self.contributions.push(contribution)
-    }
-}
 
 pub async fn get_user_contributions(token: String, username: String) -> Result<ContributionsDTO> {
     info!("Token passed -> {}", token);

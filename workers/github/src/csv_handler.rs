@@ -1,4 +1,4 @@
-use crate::github::contributions::ContributionsDTO;
+use crate::dto::contributions::ContributionsDTO;
 use anyhow::*;
 use csv::Writer;
 use std::fs::File;

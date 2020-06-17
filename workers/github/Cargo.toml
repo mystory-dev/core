@@ -18,4 +18,7 @@ log = "0.4.0"
 serde = "1.0.106"
 structopt = "0.3.13"
 reqwest = "^0.9"
-tokio = { version = "0.2", features = ["full"] }
+async-std = "1.6.1"
+sqlx = { version = "0.3.5", features = ["postgres", "chrono", "json", "runtime-async-std"] }
+postgres = { version = "0.17.3", features = ["with-chrono-0_4"] }
+
