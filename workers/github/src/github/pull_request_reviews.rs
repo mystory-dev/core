@@ -14,25 +14,26 @@ type DateTime = String;
     query_path = "schemas/queries.graphql",
     response_derives = "Debug"
 )]
-struct PullRequestContributionsQuery;
+struct PullRequestReviewContributionsQuery;
 
 pub async fn fetch_pull_requests(
     token: String,
     username: String,
     current_cursor: String,
-) -> Result<pull_request_contributions_query::ResponseData> {
-    let request_body =
-        PullRequestContributionsQuery::build_query(pull_request_contributions_query::Variables {
+) -> Result<pull_request_review_contributions_query::ResponseData> {
+    let request_body = PullRequestReviewContributionsQuery::build_query(
+        pull_request_review_contributions_query::Variables {
             username: username.clone(),
             current_cursor: Some(current_cursor.clone()),
-        });
+        },
+    );
     let mut raw_response = reqwest::Client::new()
         .post("https://api.github.com/graphql")
         .bearer_auth(token)
         .json(&request_body)
         .send()?;
 
-    let response: Response<pull_request_contributions_query::ResponseData> = raw_response
+    let response: Response<pull_request_review_contributions_query::ResponseData> = raw_response
         .json()
         .context("Attempting to deserialize the response object")?;
 
@@ -49,7 +50,7 @@ pub async fn fetch_pull_requests(
         .context("Retrieving the pull request contribution's response data")?)
 }
 
-pub async fn get_pull_request_contributions(
+pub async fn get_pull_request_review_contributions(
     token: String,
     username: String,
     mut pull_request_dto: &mut PullRequestsDTO,
@@ -57,19 +58,19 @@ pub async fn get_pull_request_contributions(
     let mut current_cursor: String = String::from("");
 
     loop {
-        debug!("Taking the next 100 pull request contributions...");
-        let pull_request_contributions_data =
+        debug!("Taking the next 100 pull request review contributions...");
+        let pull_request_review_contributions_data =
             fetch_pull_requests(token.clone(), username.clone(), current_cursor.clone()).await?;
 
-        if let Some(user) = pull_request_contributions_data.user {
+        if let Some(user) = pull_request_review_contributions_data.user {
             if let Some(nodes) = user
                 .contributions_collection
-                .pull_request_contributions
+                .pull_request_review_contributions
                 .nodes
             {
                 for contribution in nodes {
                     if let Some(contribution) = contribution {
-                        if let pull_request_contributions_query::PullRequestContributionsQueryUserContributionsCollectionPullRequestContributionsNodesPullRequestAuthorOn::User(author) = contribution.pull_request.author.unwrap().on {
+                        if let pull_request_review_contributions_query::PullRequestReviewContributionsQueryUserContributionsCollectionPullRequestReviewContributionsNodesPullRequestAuthorOn::User(author) = contribution.pull_request.author.unwrap().on {
 
                             pull_request_dto.add_pull_request(
                                 contribution.pull_request.id.clone(),
@@ -98,15 +99,15 @@ pub async fn get_pull_request_contributions(
                                     for review in review_collection {
                                         if let Some(review) = review {
                                             let review_state: String = String::from(match review.state {
-                                                    pull_request_contributions_query::PullRequestReviewState::APPROVED => "Approved",
-                                                    pull_request_contributions_query::PullRequestReviewState::CHANGES_REQUESTED => "Changes requested",
-                                                    pull_request_contributions_query::PullRequestReviewState::DISMISSED => "Dismissed",
-                                                    pull_request_contributions_query::PullRequestReviewState::COMMENTED => "Commented",
+                                                    pull_request_review_contributions_query::PullRequestReviewState::APPROVED => "Approved",
+                                                    pull_request_review_contributions_query::PullRequestReviewState::CHANGES_REQUESTED => "Changes requested",
+                                                    pull_request_review_contributions_query::PullRequestReviewState::DISMISSED => "Dismissed",
+                                                    pull_request_review_contributions_query::PullRequestReviewState::COMMENTED => "Commented",
                                                     _ => "Pending",
                                                 });
 
                                             if let Some(published_at) = review.published_at {
-                                                if let pull_request_contributions_query::PullRequestContributionsQueryUserContributionsCollectionPullRequestContributionsNodesPullRequestReviewsNodesAuthorOn::User(author) = review.author.unwrap().on {
+                                                if let pull_request_review_contributions_query::PullRequestReviewContributionsQueryUserContributionsCollectionPullRequestReviewContributionsNodesPullRequestReviewsNodesAuthorOn::User(author) = review.author.unwrap().on {
                                                         pull_request_dto.add_review(
                                                             &contribution.pull_request.id,
                                                             review.id,
@@ -163,13 +164,13 @@ pub async fn get_pull_request_contributions(
 
             if user
                 .contributions_collection
-                .pull_request_contributions
+                .pull_request_review_contributions
                 .page_info
                 .has_next_page
             {
                 if let Some(end_cursor) = user
                     .contributions_collection
-                    .pull_request_contributions
+                    .pull_request_review_contributions
                     .page_info
                     .end_cursor
                 {

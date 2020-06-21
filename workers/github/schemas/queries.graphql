@@ -83,6 +83,74 @@ query PullRequestContributionsQuery($username: String!, $currentCursor: String) 
   }
 }
 
+query PullRequestReviewContributionsQuery($username: String!, $currentCursor: String) {
+  user(login: $username) {
+    contributionsCollection {
+      pullRequestReviewContributions(first: 10, after: $currentCursor) {
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+        nodes {
+          occurredAt
+          pullRequest {
+            id
+            number
+            title
+            createdAt
+            closedAt
+            author {
+              __typename
+              ...on User {
+                id
+              }
+            }
+            repository {
+              nameWithOwner
+            }
+            reviews(first: 100) {
+              pageInfo {
+                hasNextPage
+              }
+              nodes {
+                id
+                publishedAt
+                viewerDidAuthor
+                body
+                state
+                author {
+                  __typename
+                  ...on User {
+                    id
+                  }
+                }
+              }
+            }
+            commits(first: 100) {
+              pageInfo {
+                hasNextPage
+              }
+              nodes {
+                id
+                commit {
+                  abbreviatedOid
+                  messageHeadline
+                  pushedDate
+                  author {
+                    user {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 query PullRequestReviewsQuery($name: String!, $owner: String!, $number: Int!, $currentCursor: String) {
   repository(name: $name, owner: $owner) {
     pullRequest(number: $number) {

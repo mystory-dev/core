@@ -1,7 +1,7 @@
-use crate::dto::pull_requests::PullRequestsDTO;
+use crate::dto::PullRequestsDTO;
 use anyhow::*;
 use graphql_client::{GraphQLQuery, Response};
-use log::{debug, error, info};
+use log::{debug, error};
 
 type DateTime = String;
 

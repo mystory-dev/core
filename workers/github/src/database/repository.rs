@@ -113,7 +113,7 @@ impl PullRequestRepository {
 
         tx.commit().await?;
 
-        debug!("Pull request {} added to the datbase", &modified_record);
+        debug!("Pull request {} added to the datbase", &pull_request.id);
 
         Ok(())
     }

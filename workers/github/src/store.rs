@@ -11,7 +11,7 @@ impl Store {
         pull_requests_dto: &PullRequestsDTO,
     ) -> Result<()> {
         for pull_request in pull_requests_dto.pull_requests.iter() {
-            let result = PullRequestRepository::create(db_pool, pull_request.1).await?;
+            let _ = PullRequestRepository::create(db_pool, pull_request.1).await?;
         }
 
         Ok(())
