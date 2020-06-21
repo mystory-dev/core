@@ -18,7 +18,7 @@ query ContributionsQuery($username: String!) {
 query PullRequestContributionsQuery($username: String!, $currentCursor: String) {
   user(login: $username) {
     contributionsCollection {
-      pullRequestContributions(first: 10, after: $currentCursor) {
+      pullRequestContributions(first: 100, after: $currentCursor) {
         pageInfo {
           endCursor
           hasNextPage
@@ -86,7 +86,7 @@ query PullRequestContributionsQuery($username: String!, $currentCursor: String) 
 query PullRequestReviewContributionsQuery($username: String!, $currentCursor: String) {
   user(login: $username) {
     contributionsCollection {
-      pullRequestReviewContributions(first: 10, after: $currentCursor) {
+      pullRequestReviewContributions(first: 100, after: $currentCursor) {
         pageInfo {
           endCursor
           hasNextPage
