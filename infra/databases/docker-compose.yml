@@ -1,0 +1,19 @@
+version: '2.1'
+
+volumes:
+  mystory_data:
+    external: true
+
+services:
+  database:
+    image: postgres:11.4-alpine
+    expose:
+      - '5432'
+    ports:
+      - '5433:5432'
+    volumes:
+      - mystory_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mystory
