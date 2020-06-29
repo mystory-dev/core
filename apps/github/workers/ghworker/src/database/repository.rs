@@ -97,7 +97,7 @@ impl PullRequestRepository {
             date_closed = Some(DateTime::parse_from_rfc3339(date)?);
         }
 
-        let modified_record = sqlx::query(
+        let modified_records = sqlx::query(
             r#"
             INSERT INTO pull_requests (id, author_id, date_opened, date_closed)
             VALUES ($1, $2, $3, $4)
@@ -113,7 +113,11 @@ impl PullRequestRepository {
 
         tx.commit().await?;
 
-        debug!("Pull request {} added to the datbase", &pull_request.id);
+        if modified_records > 0 {
+            debug!("Pull request {} added to the datbase", &pull_request.id);
+        } else {
+            debug!("Pull request {} already existed", &pull_request.id);
+        }
 
         Ok(())
     }

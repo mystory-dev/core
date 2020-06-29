@@ -1,5 +1,4 @@
 use anyhow::*;
-use log::debug;
 use sqlx::PgPool;
 use structopt::StructOpt;
 use worker::Worker;
@@ -20,24 +19,24 @@ pub struct GithubWorker {
     pub token: String,
     #[structopt(short, long)]
     pub username: String,
-    #[structopt(long, env = "STORE_TYPE")]
-    pub store: String,
-    #[structopt(long, env = "OUTPUT_LOCATION")]
-    pub output: String,
     #[structopt(long, env = "DATABASE_URL")]
     pub database: String,
+    #[structopt(long, env = "QUEUE_URL")]
+    pub queue_url: String,
+    #[structopt(long, env = "QUEUE_TOPIC")]
+    pub queue_topic: String,
+    #[structopt(long, env = "QUEUE_GROUP")]
+    pub queue_group: String,
 }
 
-pub async fn run(app: &GithubWorker, db_pool: &PgPool) -> Result<()> {
+pub async fn run(db_pool: &PgPool, username: String, token: String) -> Result<()> {
     let mut worker = Worker::new(db_pool);
 
     worker
-        .fetch_data_from_github(app.username.clone(), app.token.clone())
+        .fetch_data_from_github(username, token)
         .await?
         .store_data()
         .await?;
-
-    debug!("Bugging out!");
 
     Ok(())
 }
